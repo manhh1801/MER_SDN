@@ -3,24 +3,30 @@ class NetworkGraph:
     def __init__(
         self
     ):
-        # { <SrcNode> : { <DstNode> : ( <Bandwidth>, <Usage>, <State> ) }
-        self.__GRAPH = {}
+        self.__NODES = []
+        self.__LINKS = {}
 
     def add_Node(
         self,
         param_Node
     ):
         Node = param_Node.__str__()
-        self.__GRAPH[Node] = {}
+        self.__NODES.append(Node)
 
     def get_Nodes(
         self
     ):
+        return self.__NODES.copy()
+
+    def get_NeighbourNodes(
+        self,
+        param_Node
+    ):
+        Node = param_Node
         Nodes = []
-
-        for Node in self.__GRAPH.keys():
-            Nodes.append(Node)
-
+        for NodePair in self.__LINKS.keys():
+            if Node == NodePair[0]: Nodes.append(NodePair[1])
+            elif Node == NodePair[1]: Nodes.append(NodePair[0])
         return Nodes
 
     def add_Link(
@@ -29,32 +35,27 @@ class NetworkGraph:
         param_Node2,
         param_Bandwidth,
     ):
-        Node1 = param_Node1.__str__()
-        Node2 = param_Node2.__str__()
+        Node1, Node2 = param_Node1.__str__(), param_Node2.__str__()
         Bandwidth = float(param_Bandwidth)
-
-        self.__GRAPH[Node1][Node2] = (Bandwidth, 0, False)
-        self.__GRAPH[Node2][Node1] = (Bandwidth, 0, False)
+        Usage, State = 0, False
+        self.__LINKS[(Node1, Node2)] = [Bandwidth, Usage, State]
 
     def get_Links(
-        self,
-        param_Node
+        self
     ):
-        Node = param_Node
-
-        Links = self.__GRAPH[Node]
-
-        return Links
+        return self.__LINKS.copy()
 
     def get_Link(
         self,
         param_Node1,
         param_Node2
     ):
-        Node1 = param_Node1
-        Node2 = param_Node2
-
-        Link = self.__GRAPH[Node1][Node2]
+        Node1, Node2 = param_Node1, param_Node2
+        Link = None
+        if self.__LINKS.__contains__((Node1, Node2)):
+            Link = self.__LINKS[(Node1, Node2)]
+        elif self.__LINKS.__contains__((Node2, Node1)):
+            Link = self.__LINKS[(Node2, Node1)]
         return Link
 
     def apply_Flow(
@@ -62,46 +63,52 @@ class NetworkGraph:
         param_Flow
     ):
         Flow = param_Flow
-
         for _index in range(len(Flow.PATH) - 1):
-            Link = self.__GRAPH[Flow.PATH[_index]][Flow.PATH[_index + 1]]
-            Bandwidth = Link[0]
-            Usage = Link[1] + Flow.FLOW_RATE
-            State = True
-            self.__GRAPH[Flow.PATH[_index]][Flow.PATH[_index + 1]] = (Bandwidth, Usage, State)
-            self.__GRAPH[Flow.PATH[_index + 1]][Flow.PATH[_index]] = (Bandwidth, Usage, State)
+            FromNode, ToNode = Flow.PATH[_index], Flow.PATH[_index+1]
+            Link = self.get_Link(FromNode, ToNode)
+            Usage, State = Link[1] + Flow.FLOW_RATE, True
+            Link[1], Link[2] = Usage, State
 
-    def reset_Network(
-        self
+    def remove_Flow(
+        self,
+        param_Flow
     ):
-        for Node1 in self.__GRAPH.keys():
-            for Node2 in self.__GRAPH[Node1].keys():
-                Link = self.__GRAPH[Node1][Node2]
-                self.__GRAPH[Node1][Node2] = (Link[0], 0, False)
+        Flow = param_Flow
+        for _index in range(len(Flow.PATH) - 1):
+            FromNode, ToNode = Flow.PATH[_index], Flow.PATH[_index + 1]
+            Link = self.get_Link(FromNode, ToNode)
+            Usage, State = Link[1] - Flow.FLOW_RATE, True
+            Link[1], Link[2] = Usage, State
 
     def turnoff_UnneededLinks(
         self
     ):
-        for Node1 in self.__GRAPH.keys():
-            for Node2 in self.__GRAPH[Node1].keys():
-                Link = self.__GRAPH[Node1][Node2]
-                if Link[1] == 0:
-                    self.__GRAPH[Node1][Node2] = (Link[0], 0, False)
+        for NodePair in self.__LINKS.keys():
+            Link = self.__LINKS[NodePair]
+            Usage = Link[1]
+            if Usage == 0:
+                Link[2] = False
+
+    def reset_Network(
+        self
+    ):
+        for NodePair in self.__LINKS.keys():
+            Link = self.__LINKS[NodePair]
+            Link[1], Link[2] = 0, False
 
     def __str__(
         self
     ):
         String = []
-
-        for Node1 in self.__GRAPH.keys():
-            String.append(f"{Node1}:\n")
-            for Node2 in self.__GRAPH[Node1].keys():
-                Link = self.__GRAPH[Node1][Node2]
-                String.append(f"    {Node2}: {Link}\n")
-
+        for Node in self.__NODES:
+            String.append(f"\"{Node}\" ")
+        String.append(f"\n")
+        for NodePair in self.__LINKS.keys():
+            String.append(f"{NodePair}: {self.__LINKS[NodePair]}\n")
         String = ''.join(String)
-
         return String
+
+
 
 class NetworkFlow:
 
@@ -115,3 +122,8 @@ class NetworkFlow:
         self.DST_NODE = param_DstNode.__str__()
         self.FLOW_RATE = float(param_FlowRate)
         self.PATH = []
+
+    def __str__(
+        self
+    ):
+        return f"{self.SRC_NODE} - {self.DST_NODE}: {self.FLOW_RATE} {self.PATH}"
