@@ -2,7 +2,7 @@ from os import listdir, path
 from re import match
 from csv import writer
 from Network import NetworkGraph, NetworkFlow
-from PathAssign import MEPT
+from PathAssign import MEPT, __find_AllPath
 
 
 
@@ -67,15 +67,17 @@ def extract_Flows(
 
 
 def find_UBoundaries(
-        param_NetworkGraph,
-        param_Flows,
+    param_NetworkGraph,
+    param_Flows,
 ):
     Graph = param_NetworkGraph
     Flows = param_Flows
     EE = 0
     Umin = Umax = 0
 
-    for _index_Umin in range(1, 100, 1):
+    path = __find_AllPath(Graph, "ATLAM5", "CHINng")
+
+    for _index_Umin in range(20, 100, 1):
         _Umin = _index_Umin * 0.01
         for _index_Umax in range(100, _index_Umin, -1):
             _Umax = _index_Umax * 0.01
@@ -87,14 +89,13 @@ def find_UBoundaries(
                 if State is True:
                     _numerator += 1
             _EE = 1 - _numerator / _denominator
-            # print(f"{round(_Umin, 2)} - {round(_Umax, 2)}: {_EE}")
+            print(f"{round(_Umin, 2)} - {round(_Umax, 2)}: {_EE}")
             if _EE >= EE:
                 EE = _EE
                 Umin, Umax = _Umin, _Umax
             Graph.reset_Network()
 
     return Umin, Umax
-
 
 def write_CSV(
         param_File,
