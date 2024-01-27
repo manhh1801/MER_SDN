@@ -45,9 +45,6 @@ def MEPT(
         PathEPT = -1
         Length = inf
 
-        # if len(Flow.PATH) != 0:
-        #     Graph.remove_Flow(Flow)
-
         Paths = __find_AllPath(Graph, Flow.SRC_NODE, Flow.DST_NODE)
         for Path in Paths:
             IsContainable = True
