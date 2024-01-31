@@ -1,3 +1,5 @@
+from PathAssigning import _find_AllPath
+
 class NetworkGraph:
 
     def __init__(
@@ -5,6 +7,7 @@ class NetworkGraph:
     ):
         self.__NODES = []
         self.__LINKS = {}
+        self.__ALL_PATH = {}
 
     def add_Node(
         self,
@@ -95,6 +98,25 @@ class NetworkGraph:
         for NodePair in self.__LINKS.keys():
             Link = self.__LINKS[NodePair]
             Link[1], Link[2] = 0, False
+
+    def initiate_AllPath(
+        self
+    ):
+        for SrcNode in self.__NODES:
+            for DstNode in self.__NODES:
+                if SrcNode == DstNode:
+                    continue
+                Paths = _find_AllPath(self, SrcNode, DstNode)
+                self.__ALL_PATH[(SrcNode, DstNode)] = Paths
+
+    def get_Paths(
+        self,
+        param_SrcNode,
+        param_DstNode
+    ):
+        SrcNode = param_SrcNode
+        DstNode = param_DstNode
+        return self.__ALL_PATH[(SrcNode, DstNode)].copy()
 
     def __str__(
         self

@@ -2,7 +2,7 @@ from math import inf
 
 
 
-def __find_AllPath(
+def _find_AllPath(
     param_NetworkGraph,
     param_SrcNode,
     param_DstNode
@@ -45,7 +45,7 @@ def MEPT(
         PathEPT = -1
         Length = inf
 
-        Paths = __find_AllPath(Graph, Flow.SRC_NODE, Flow.DST_NODE)
+        Paths = Graph.get_Paths(Flow.SRC_NODE, Flow.DST_NODE)
         for Path in Paths:
             IsContainable = True
             _numerator = _denominator = 0
@@ -67,5 +67,7 @@ def MEPT(
 
         if len(Flow.PATH) != 0:
             Graph.apply_Flow(Flow)
+        else:
+            raise Exception("No path available.")
 
     Graph.turnoff_UnneededLinks()
